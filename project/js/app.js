@@ -295,6 +295,9 @@ WebGLGlobeDataSource.prototype.load = function(data) {
         // Lines can get a bit glitchy when at 1 (which is the max value)
         var subtract = 0.2;
 
+        // Boolean to add or subtract our random shuffle for placing rectangle
+        var tictok
+
         //Now loop over each coordinate in the series and create
         // our entities from the data.
         for (var i = 0; i < coordinates.length; i += 5) {
@@ -304,35 +307,34 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             var closingPrice = coordinates[i + 3];
             var volume = coordinates[i + 4];
             
-            // Scale the height to between 0 and 1
-            var height = clamp(scale(closingPrice * volume, 0, maxValue) - subtract);
+            // Scale the height so it displays nicely, lets get its hundreds of millions and scale it up
+            var height = closingPrice * volume / 10000;
+            console.log(height)
 
             //Ignore lines of zero height.
             if(height === 0) {
                 continue;
             }
 
-            var color = Cesium.Color.fromHsl((0.6 - (height * 0.5)), 1.0, 0.5);
-            var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
-            var heightPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height * heightScale);
+            // TODO: Need to somehow ensure they don't stack awkwardly. For time being I am adding a random offset
 
-            //WebGL Globe only contains lines, so that's the only graphics we create.
-            var polyline = new Cesium.PolylineGraphics();
-            polyline.material = new Cesium.ColorMaterialProperty(color);
-            polyline.width = new Cesium.ConstantProperty(4);
-            polyline.arcType = new Cesium.ConstantProperty(Cesium.ArcType.NONE);
-            polyline.positions = new Cesium.ConstantProperty([surfacePosition, heightPosition]);
+            var rand = Math.floor((Math.random() * 7) + 1);
+            if (tictok) {
+                rand = -rand;
+            }
+            tictok = !tictok
 
-            //The polyline instance itself needs to be on an entity.
-            var entity = new Cesium.Entity({
-                id : name,
-                show : show,
-                polyline : polyline,
-                seriesName : seriesName //Custom property to indicate series name
+            entities.add({
+                rectangle : {
+                    coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5+rand, latitude-0.5+rand, longitude+0.5+rand, latitude+0.5+rand),
+                    extrudedHeight : height,
+                    outline: true,
+                    outlineColor: Cesium.Color.WHITE,
+                    outlineWidth: 4,
+                    stRotation : Cesium.Math.toRadians(45),
+                    material : Cesium.Color.fromRandom({alpha : 1.0})
+                }
             });
-
-            //Add the entity to the collection.
-            entities.add(entity);
         }
     }
 
