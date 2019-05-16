@@ -322,10 +322,13 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             if (tictok) {
                 rand = -rand;
             }
-            tictok = !tictok
+            tictok = !tictok;
 
             entities.add({
+                name : name,
+                description : "PLACEHOLDER",
                 rectangle : {
+                    id : name,
                     coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5+rand, latitude-0.5+rand, longitude+0.5+rand, latitude+0.5+rand),
                     extrudedHeight : height,
                     outline: true,
