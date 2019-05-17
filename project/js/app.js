@@ -208,6 +208,12 @@ function scale(val, min, max) {
 function clamp(val) {
     return Math.max(0, Math.min(val, 1));
 }
+
+function showStockData(data) {
+    console.log("Showing data")
+    console.log(data)
+}
+
 /**
  * Asynchronously loads the GeoJSON at the provided url, replacing any existing data.
  * @param {Object} url The url to be processed.
@@ -276,70 +282,77 @@ WebGLGlobeDataSource.prototype.load = function(data) {
     //[["series1",[latitude, longitude, height, ... ]
     // ["series2",[latitude, longitude, height, ... ]]
 
-    // Loop over each series
-    for (var x = 0; x < data.length; x++) {
-        var series = data[x];
-        var seriesName = series[0];
-        var coordinates = series[1];
+    var type = data[0];
+    if (type == "stocks") {
+        console.log("Parsing stock data...");
+        // Loop over each series
+        for (var x = 1; x < data.length; x++) {
+            var series = data[x];
+            var seriesName = series[0];
+            var coordinates = series[1];
 
-        //Add the name of the series to our list of possible values.
-        this._seriesNames.push(seriesName);
+            //Add the name of the series to our list of possible values.
+            this._seriesNames.push(seriesName);
 
-        //Make the first series the visible one by default
-        var show = x === 0;
-        if (show) {
-            this._seriesToDisplay = seriesName;
-        }
-
-        var maxValue = getMaxValue(coordinates, 3, 4, 5)
-        // Lines can get a bit glitchy when at 1 (which is the max value)
-        var subtract = 0.2;
-
-        // Boolean to add or subtract our random shuffle for placing rectangle
-        var tictok
-
-        //Now loop over each coordinate in the series and create
-        // our entities from the data.
-        for (var i = 0; i < coordinates.length; i += 5) {
-            var name = coordinates[i];
-            var latitude = coordinates[i + 1];
-            var longitude = coordinates[i + 2];
-            var closingPrice = coordinates[i + 3];
-            var volume = coordinates[i + 4];
-            
-            // Scale the height so it displays nicely, lets get its hundreds of millions and scale it up
-            var height = closingPrice * volume / 10000;
-            console.log(height)
-
-            //Ignore lines of zero height.
-            if(height === 0) {
-                continue;
+            //Make the first series the visible one by default
+            var show = x === 0;
+            if (show) {
+                this._seriesToDisplay = seriesName;
             }
 
-            // TODO: Need to somehow ensure they don't stack awkwardly. For time being I am adding a random offset
+            var maxValue = getMaxValue(coordinates, 3, 4, 5)
+            // Lines can get a bit glitchy when at 1 (which is the max value)
+            var subtract = 0.2;
 
-            var rand = Math.floor((Math.random() * 7) + 1);
-            if (tictok) {
-                rand = -rand;
-            }
-            tictok = !tictok;
+            // Boolean to add or subtract our random shuffle for placing rectangle
+            var tictok
 
-            entities.add({
-                name : name,
-                description : "PLACEHOLDER",
-                rectangle : {
-                    id : name,
-                    coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5+rand, latitude-0.5+rand, longitude+0.5+rand, latitude+0.5+rand),
-                    extrudedHeight : height,
-                    outline: true,
-                    outlineColor: Cesium.Color.WHITE,
-                    outlineWidth: 4,
-                    stRotation : Cesium.Math.toRadians(45),
-                    material : Cesium.Color.fromRandom({alpha : 1.0})
+            //Now loop over each coordinate in the series and create
+            // our entities from the data.
+            for (var i = 0; i < coordinates.length; i += 5) {
+                var name = coordinates[i];
+                var latitude = coordinates[i + 1];
+                var longitude = coordinates[i + 2];
+                var closingPrice = coordinates[i + 3];
+                var volume = coordinates[i + 4];
+                
+                // Scale the height so it displays nicely, lets get its hundreds of millions and scale it up
+                var height = closingPrice * volume / 10000;
+
+                //Ignore lines of zero height.
+                if(height === 0) {
+                    continue;
                 }
-            });
+
+                // TODO: Need to somehow ensure they don't stack awkwardly. For time being I am adding a random offset
+
+                var rand = Math.floor((Math.random() * 7) + 1);
+                if (tictok) {
+                    rand = -rand;
+                }
+                tictok = !tictok;
+
+                entities.add({
+                    name : name,
+                    description : "PLACEHOLDER",
+                    rectangle : {
+                        id : name,
+                        coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5+rand, latitude-0.5+rand, longitude+0.5+rand, latitude+0.5+rand),
+                        extrudedHeight : height,
+                        outline: true,
+                        outlineColor: Cesium.Color.WHITE,
+                        outlineWidth: 4,
+                        stRotation : Cesium.Math.toRadians(45),
+                        material : Cesium.Color.fromRandom({alpha : 1.0})
+                    }
+                });
+            }
         }
+    } else if (type == "population") {
+        console.log("Parsing population data...")
     }
+
+   
 
     //Once all data is processed, call resumeEvents and raise the changed event.
     entities.resumeEvents();
@@ -371,6 +384,27 @@ dataSource.loadUrl('../data/test_stocks.json').then(function() {
     }
 });
 
+//Now that we've defined our own DataSource, we can use it to load
+//any JSON data formatted for WebGL Globe.
+var dataSource2 = new WebGLGlobeDataSource();
+dataSource2.loadUrl('../data/population_test.json').then(function() {
+    //After the initial load, create buttons to let the user switch among series.
+    // function createSeriesSetter(seriesName) {
+    //     return function() {
+    //         dataSource2.seriesToDisplay = seriesName;
+    //     };
+    // }
+
+    // for (var i = 0; i < dataSource2.seriesNames.length; i++) {
+    //     var seriesName = dataSource2.seriesNames[i];
+    //     Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
+    // }
+});
+
+// dataSource.loadUrl('../data/population_test.csv').then(function() {
+//     console.log("Loaded population data")
+// });
+
 //Create a Viewer instances and add the DataSource.
 var viewer = new Cesium.Viewer('cesiumContainer', {
     animation : false,
@@ -378,6 +412,11 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 viewer.clock.shouldAnimate = false;
 viewer.dataSources.add(dataSource);
+
+var path;
+var pos;
+
+// TODO center viewer on most interesting point
 
 // TODO show logo on mouseover
 // var scene = viewer.scene;
