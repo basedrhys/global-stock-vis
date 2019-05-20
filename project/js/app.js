@@ -443,7 +443,7 @@ dataSource.loadUrl('../data/test_stocks.json').then(function() {
 //Now that we've defined our own DataSource, we can use it to load
 //any JSON data formatted for WebGL Globe.
 var dataSource2 = new WebGLGlobeDataSource();
-dataSource2.loadUrl('../data/population_test.json').then(function() {
+dataSource2.loadUrl('../data/cities_processed.json').then(function() {
     // After the initial load, create buttons to let the user switch among series.
     function createSeriesSetter(seriesName) {
         return function() {
