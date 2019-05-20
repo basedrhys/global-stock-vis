@@ -189,12 +189,23 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
     }
 });
 
-function getMaxValue(coordinates, closingI, volumeI, jumpVal) {
+function getMaxStocksValue(coordinates, closingI, volumeI, jumpVal) {
     var maxVal = -1;
     for (var i = 0; i < coordinates.length; i += jumpVal) {
         var tempHeight = coordinates[i + closingI] * coordinates[i + volumeI]
         if (tempHeight > maxVal) {
             maxVal = tempHeight;
+        }
+    }
+    return maxVal
+}
+
+function getMaxPopulationVal(coordinates, populationI, jumpVal) {
+    var maxVal = -1;
+    for (var i = 0; i < coordinates.length; i += jumpVal) {
+        var temp = coordinates[i + populationI]
+        if (temp > maxVal) {
+            maxVal = temp;
         }
     }
     return maxVal
@@ -253,11 +264,9 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
  * @param {Array} data The object to be processed.
  */
 WebGLGlobeDataSource.prototype.load = function(data) {
-    //>>includeStart('debug', pragmas.debug);
     if (!Cesium.defined(data)) {
         throw new Cesium.DeveloperError('data is required.');
     }
-    //>>includeEnd('debug');
 
     //Clear out any data that might already exist.
     this._setLoading(true);
@@ -300,9 +309,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 this._seriesToDisplay = seriesName;
             }
 
-            var maxValue = getMaxValue(coordinates, 3, 4, 5)
-            // Lines can get a bit glitchy when at 1 (which is the max value)
-            var subtract = 0.2;
+            var maxValue = getMaxStocksValue(coordinates, 3, 4, 5)
 
             // Boolean to add or subtract our random shuffle for placing rectangle
             var tictok
@@ -350,6 +357,54 @@ WebGLGlobeDataSource.prototype.load = function(data) {
         }
     } else if (type == "population") {
         console.log("Parsing population data...")
+        for (var x = 1; x < data.length; x++) {
+            var series = data[x];
+            var seriesName = series[0];
+            var coordinates = series[1];
+
+            //Add the name of the series to our list of possible values.
+            this._seriesNames.push(seriesName);
+
+            //Make the first series the visible one by default
+            var show = x === 0;
+            if (show) {
+                this._seriesToDisplay = seriesName;
+            }
+
+            var maxValue = getMaxPopulationVal(coordinates, 4, 5);
+
+            //Now loop over each coordinate in the series and create
+            // our entities from the data.
+            for (var i = 0; i < coordinates.length; i += 5) {
+                var cityName = coordinates[i];
+                var country = coordinates[i + 1];
+                var latitude = coordinates[i + 2];
+                var longitude = coordinates[i + 3];
+                var population = coordinates[i + 4];
+                
+                var width = scale(population, 0, maxValue);
+                var scaleFactor = 500000;
+
+                // Scale the lightness between 0.5 (Max population, vivid red) and 
+                // 1 (Minimum population, pale red/white)
+                var lightnessDif = 0.5 + (1 - width) / 2;
+                var color = Cesium.Color.fromHsl(0.0, 1, lightnessDif, 0.5);
+                
+                var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
+                
+                entities.add({
+                    name : cityName,
+                    description : cityName + ", " + country,
+                    position : surfacePosition,
+                    ellipse : {
+                        semiMajorAxis: width * scaleFactor,
+                        semiMinorAxis: width * scaleFactor,
+                        height: 0,
+                        material : color
+                    }
+                });
+            }
+        }
     }
 
    
@@ -367,9 +422,10 @@ WebGLGlobeDataSource.prototype._setLoading = function(isLoading) {
     }
 };
 
-//Now that we've defined our own DataSource, we can use it to load
-//any JSON data formatted for WebGL Globe.
+// //Now that we've defined our own DataSource, we can use it to load
+// //any JSON data formatted for WebGL Globe.
 var dataSource = new WebGLGlobeDataSource();
+
 dataSource.loadUrl('../data/test_stocks.json').then(function() {
     //After the initial load, create buttons to let the user switch among series.
     function createSeriesSetter(seriesName) {
@@ -388,22 +444,18 @@ dataSource.loadUrl('../data/test_stocks.json').then(function() {
 //any JSON data formatted for WebGL Globe.
 var dataSource2 = new WebGLGlobeDataSource();
 dataSource2.loadUrl('../data/population_test.json').then(function() {
-    //After the initial load, create buttons to let the user switch among series.
-    // function createSeriesSetter(seriesName) {
-    //     return function() {
-    //         dataSource2.seriesToDisplay = seriesName;
-    //     };
-    // }
+    // After the initial load, create buttons to let the user switch among series.
+    function createSeriesSetter(seriesName) {
+        return function() {
+            dataSource2.seriesToDisplay = seriesName;
+        };
+    }
 
-    // for (var i = 0; i < dataSource2.seriesNames.length; i++) {
-    //     var seriesName = dataSource2.seriesNames[i];
-    //     Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
-    // }
+    for (var i = 0; i < dataSource2.seriesNames.length; i++) {
+        var seriesName = dataSource2.seriesNames[i];
+        Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
+    }
 });
-
-// dataSource.loadUrl('../data/population_test.csv').then(function() {
-//     console.log("Loaded population data")
-// });
 
 //Create a Viewer instances and add the DataSource.
 var viewer = new Cesium.Viewer('cesiumContainer', {
@@ -412,6 +464,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 viewer.clock.shouldAnimate = false;
 viewer.dataSources.add(dataSource);
+viewer.dataSources.add(dataSource2);
 
 var path;
 var pos;
