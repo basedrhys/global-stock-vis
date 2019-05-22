@@ -135,8 +135,11 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             var collection = this._entityCollection;
             var entities = collection.values;
             collection.suspendEvents();
+            console.log("Entity length is " + entities.length)
+            console.log("Value is " + value);
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
+                console.log(entity.seriesName);
                 entity.show = value === entity.seriesName;
             }
             collection.resumeEvents();
@@ -270,10 +273,9 @@ WebGLGlobeDataSource.prototype.load = function(data) {
 
     //Clear out any data that might already exist.
     this._setLoading(true);
-    this._seriesNames.length = 0;
-    this._seriesToDisplay = undefined;
+    // this._seriesNames.length = 0;
+    // this._seriesToDisplay = undefined;
 
-    var heightScale = this.heightScale;
     var entities = this._entityCollection;
 
     //It's a good idea to suspend events when making changes to a
@@ -281,7 +283,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
     //into the minimal amount of function calls and all take place at the
     //end of processing (when resumeEvents is called).
     entities.suspendEvents();
-    entities.removeAll();
+    // entities.removeAll();
 
     //WebGL Globe JSON is an array of series, where each series itself is an
     //array of two items, the first containing the series name and the second
@@ -351,7 +353,8 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                         outlineWidth: 4,
                         stRotation : Cesium.Math.toRadians(45),
                         material : Cesium.Color.fromRandom({alpha : 1.0})
-                    }
+                    },
+                    seriesName : seriesName
                 });
             }
         }
@@ -401,7 +404,8 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                         semiMinorAxis: width * scaleFactor,
                         height: 0,
                         material : color
-                    }
+                    },
+                    seriesName : seriesName
                 });
             }
         }
@@ -422,10 +426,16 @@ WebGLGlobeDataSource.prototype._setLoading = function(isLoading) {
     }
 };
 
+//Create a Viewer instances and add the DataSource.
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    animation : false,
+    timeline : false
+});
+viewer.clock.shouldAnimate = false;
+
 // //Now that we've defined our own DataSource, we can use it to load
 // //any JSON data formatted for WebGL Globe.
 var dataSource = new WebGLGlobeDataSource();
-
 dataSource.loadUrl('../data/test_stocks.json').then(function() {
     //After the initial load, create buttons to let the user switch among series.
     function createSeriesSetter(seriesName) {
@@ -438,33 +448,29 @@ dataSource.loadUrl('../data/test_stocks.json').then(function() {
         var seriesName = dataSource.seriesNames[i];
         Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
     }
+    viewer.dataSources.add(dataSource);
 });
 
-//Now that we've defined our own DataSource, we can use it to load
-//any JSON data formatted for WebGL Globe.
-var dataSource2 = new WebGLGlobeDataSource();
-dataSource2.loadUrl('../data/cities_processed.json').then(function() {
-    // After the initial load, create buttons to let the user switch among series.
-    function createSeriesSetter(seriesName) {
-        return function() {
-            dataSource2.seriesToDisplay = seriesName;
-        };
-    }
+// //Now that we've defined our own DataSource, we can use it to load
+// //any JSON data formatted for WebGL Globe.
+// var dataSource2 = new WebGLGlobeDataSource();
+// dataSource2.loadUrl('../data/cities_processed.json').then(function() {
+//     // After the initial load, create buttons to let the user switch among series.
+//     function createSeriesSetter(seriesName) {
+//         return function() {
+//             dataSource2.seriesToDisplay = seriesName;
+//         };
+//     }
 
-    for (var i = 0; i < dataSource2.seriesNames.length; i++) {
-        var seriesName = dataSource2.seriesNames[i];
-        Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
-    }
-});
+//     for (var i = 0; i < dataSource2.seriesNames.length; i++) {
+//         var seriesName = dataSource2.seriesNames[i];
+//         Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
+//     }
+//     viewer.dataSources.add(dataSource2);
+// });
 
-//Create a Viewer instances and add the DataSource.
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    animation : false,
-    timeline : false
-});
-viewer.clock.shouldAnimate = false;
-viewer.dataSources.add(dataSource);
-viewer.dataSources.add(dataSource2);
+
+
 
 var path;
 var pos;
