@@ -136,7 +136,6 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             var entities = collection.values;
             collection.suspendEvents();
             console.log("Entity length is " + entities.length)
-            console.log("Value is " + value);
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
                 console.log(entity.seriesName);
@@ -320,8 +319,8 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             // our entities from the data.
             for (var i = 0; i < coordinates.length; i += 5) {
                 var name = coordinates[i];
-                var latitude = coordinates[i + 1];
-                var longitude = coordinates[i + 2];
+                var latitude = coordinates[i + 2];
+                var longitude = coordinates[i + 1];
                 var closingPrice = coordinates[i + 3];
                 var volume = coordinates[i + 4];
                 
@@ -451,23 +450,23 @@ dataSource.loadUrl('../data/test_stocks.json').then(function() {
     viewer.dataSources.add(dataSource);
 });
 
-// //Now that we've defined our own DataSource, we can use it to load
-// //any JSON data formatted for WebGL Globe.
-// var dataSource2 = new WebGLGlobeDataSource();
-// dataSource2.loadUrl('../data/cities_processed.json').then(function() {
-//     // After the initial load, create buttons to let the user switch among series.
-//     function createSeriesSetter(seriesName) {
-//         return function() {
-//             dataSource2.seriesToDisplay = seriesName;
-//         };
-//     }
+//Now that we've defined our own DataSource, we can use it to load
+//any JSON data formatted for WebGL Globe.
+var dataSource2 = new WebGLGlobeDataSource();
+dataSource2.loadUrl('../data/cities_processed.json').then(function() {
+    // // After the initial load, create buttons to let the user switch among series.
+    // function createSeriesSetter(seriesName) {
+    //     return function() {
+    //         dataSource2.seriesToDisplay = seriesName;
+    //     };
+    // }
 
-//     for (var i = 0; i < dataSource2.seriesNames.length; i++) {
-//         var seriesName = dataSource2.seriesNames[i];
-//         Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
-//     }
-//     viewer.dataSources.add(dataSource2);
-// });
+    // for (var i = 0; i < dataSource2.seriesNames.length; i++) {
+    //     var seriesName = dataSource2.seriesNames[i];
+    //     Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
+    // }
+    viewer.dataSources.add(dataSource2);
+});
 
 
 
