@@ -393,10 +393,12 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 var color = Cesium.Color.fromHsl(0.0, 1, lightnessDif, 0.5);
                 
                 var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
+
+                var popFormat = population / 1000.0 + " million"
                 
                 entities.add({
                     name : cityName,
-                    description : cityName + ", " + country,
+                    description : cityName + ", " + country + ". Population:" + popFormat ,
                     position : surfacePosition,
                     ellipse : {
                         semiMajorAxis: width * scaleFactor,
@@ -435,7 +437,7 @@ viewer.clock.shouldAnimate = false;
 // //Now that we've defined our own DataSource, we can use it to load
 // //any JSON data formatted for WebGL Globe.
 var dataSource = new WebGLGlobeDataSource();
-dataSource.loadUrl('../data/test_stocks.json').then(function() {
+dataSource.loadUrl('../data/stocks/test_stocks.json').then(function() {
     //After the initial load, create buttons to let the user switch among series.
     function createSeriesSetter(seriesName) {
         return function() {
@@ -453,7 +455,7 @@ dataSource.loadUrl('../data/test_stocks.json').then(function() {
 //Now that we've defined our own DataSource, we can use it to load
 //any JSON data formatted for WebGL Globe.
 var dataSource2 = new WebGLGlobeDataSource();
-dataSource2.loadUrl('../data/cities_processed.json').then(function() {
+dataSource2.loadUrl('../data/pop/cities_processed.json').then(function() {
     // // After the initial load, create buttons to let the user switch among series.
     // function createSeriesSetter(seriesName) {
     //     return function() {
