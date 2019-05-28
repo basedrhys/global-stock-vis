@@ -319,8 +319,8 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             // our entities from the data.
             for (var i = 0; i < coordinates.length; i += 5) {
                 var name = coordinates[i];
-                var latitude = coordinates[i + 2];
-                var longitude = coordinates[i + 1];
+                var latitude = coordinates[i + 1];
+                var longitude = coordinates[i + 2];
                 var closingPrice = coordinates[i + 3];
                 var volume = coordinates[i + 4];
                 
