@@ -1450,9 +1450,22 @@ body {
     padding: 2px 5px;
     position: absolute;
 }
+#footer {
+    text-align: center;
+    margin: 5px;
+    padding: 2px 5px;
+    position: absolute;
+    bottom: 5px;
+    background-color: rgba(220, 220, 220, 0.7);
+    border-radius: 10px;
+    width: 250px;
+}
 .infoPanel {
     background: rgba(42, 42, 42, 0.8);
     padding: 4px;
     border: 1px solid #444;
     border-radius: 4px;
+}
+#showing-label {
+    color: #000;
 }

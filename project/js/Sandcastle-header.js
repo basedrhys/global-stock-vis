@@ -63,6 +63,20 @@
             button.textContent = text;
             document.getElementById(toolbarID || 'toolbar').appendChild(button);
         },
+        addFooterButton : function(text, onclick, footerID) {
+            window.Sandcastle.declare(onclick);
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'cesium-button';
+            button.id = 'change-vis'
+            button.onclick = function() {
+                window.Sandcastle.reset();
+                window.Sandcastle.highlight(onclick);
+                onclick();
+            };
+            button.textContent = text;
+            document.getElementById(footerID || 'footer').appendChild(button);
+        },
         addDefaultToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.addToolbarButton(text, onclick, toolbarID);
             defaultAction = onclick;

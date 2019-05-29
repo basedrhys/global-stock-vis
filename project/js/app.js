@@ -27,6 +27,7 @@ function WebGLGlobeDataSource(name) {
     this._seriesToDisplay = undefined;
     this._heightScale = 10000000;
     this._entityCluster = new Cesium.EntityCluster();
+    this._showVolume = false;
 }
 
 Object.defineProperties(WebGLGlobeDataSource.prototype, {
@@ -135,10 +136,8 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             var collection = this._entityCollection;
             var entities = collection.values;
             collection.suspendEvents();
-            console.log("Entity length is " + entities.length)
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
-                console.log(entity.seriesName);
                 entity.show = value === entity.seriesName;
             }
             collection.resumeEvents();
@@ -171,6 +170,52 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
         },
         set : function(value) {
             this._entityCollection = value;
+        }
+    },
+        /**
+     * Gets whether or not this data source should be displayed.
+     * @memberof WebGLGlobeDataSource.prototype
+     * @type {Boolean}
+     */
+    showVolume : {
+        get : function() {
+            return this._showVolume;
+        },
+        set : function(value) {
+            console.log("Changing show volume to " + value)
+            this._showVolume = value;
+
+            // Change the label text to reflect the showing value
+            var btnText;
+            var labelText;
+            if (this._showVolume) {
+                btnText = 'Show Price';
+                labelText = 'Showing: Trade Volume'
+            } else {
+                btnText = 'Show Volume';
+                labelText = 'Showing: Stock Price';
+            }
+            document.getElementById('change-vis').innerText = btnText;
+            document.getElementById('showing-label').innerText = labelText;
+
+            //Iterate over all entities and set their show property
+            //to true only if they are part of the current series.
+            var collection = this._entityCollection;
+            var entities = collection.values;
+            collection.suspendEvents();
+            for (var i = 0; i < entities.length; i++) {
+                var entity = entities[i];
+                var heightVal;
+                if (this._showVolume) {
+                    heightVal = entity.volume / 50;
+                } else {
+                    heightVal = entity.closingPrice * 50000;
+                }
+                entity.rectangle.extrudedHeight = heightVal;
+                // entity.
+                // entity.show = value === entity.seriesName;
+            }
+            collection.resumeEvents();
         }
     },
     /**
@@ -325,7 +370,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 var volume = coordinates[i + 4];
                 
                 // Scale the height so it displays nicely, lets get its hundreds of millions and scale it up
-                var height = closingPrice * volume / 10000;
+                var height = closingPrice;
 
                 //Ignore lines of zero height.
                 if(height === 0) {
@@ -341,6 +386,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 tictok = !tictok;
 
                 entities.add({
+                    show: false,
                     name : name,
                     description : "PLACEHOLDER",
                     rectangle : {
@@ -353,7 +399,9 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                         stRotation : Cesium.Math.toRadians(45),
                         material : Cesium.Color.fromRandom({alpha : 1.0})
                     },
-                    seriesName : seriesName
+                    seriesName : seriesName,
+                    closingPrice: closingPrice,
+                    volume: volume
                 });
             }
         }
@@ -385,11 +433,11 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 var population = coordinates[i + 4];
                 
                 var width = scale(population, 0, maxValue);
-                var scaleFactor = 500000;
+                var scaleFactor = 1000000;
 
                 // Scale the lightness between 0.5 (Max population, vivid red) and 
                 // 1 (Minimum population, pale red/white)
-                var lightnessDif = 0.5 + (1 - width) / 2;
+                var lightnessDif = 0.5 + (1 - width) / 3;
                 var color = Cesium.Color.fromHsl(0.0, 1, lightnessDif, 0.5);
                 
                 var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
@@ -450,6 +498,16 @@ dataSource.loadUrl('../data/stocks/test_stocks.json').then(function() {
         Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
     }
     viewer.dataSources.add(dataSource);
+
+    // Add the button to change the value from the stocks we're looking at
+    function changeStockVis() {
+        return function() {
+            dataSource.showVolume = !dataSource.showVolume;
+        };
+    }
+    
+    Sandcastle.addFooterButton("Show Volume", changeStockVis())
+    dataSource.showVolume = false;
 });
 
 //Now that we've defined our own DataSource, we can use it to load
@@ -469,8 +527,6 @@ dataSource2.loadUrl('../data/pop/cities_processed.json').then(function() {
     // }
     viewer.dataSources.add(dataSource2);
 });
-
-
 
 
 var path;
