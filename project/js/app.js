@@ -370,7 +370,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 var volume = coordinates[i + 4];
                 
                 // Scale the height so it displays nicely, lets get its hundreds of millions and scale it up
-                var height = closingPrice;
+                var height = closingPrice * 9000;
 
                 //Ignore lines of zero height.
                 if(height === 0) {
@@ -384,11 +384,11 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                     rand = -rand;
                 }
                 tictok = !tictok;
-
+                // TODO: string format in the description, plus an added space to add some urls for news articles, maybe an image if easy enough
                 entities.add({
                     show: false,
                     name : name,
-                    description : "PLACEHOLDER",
+                    description : "Closing price: $"+closingPrice+"  Volume: "+volume,
                     rectangle : {
                         id : name,
                         coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5+rand, latitude-0.5+rand, longitude+0.5+rand, latitude+0.5+rand),
