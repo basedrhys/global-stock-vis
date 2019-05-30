@@ -272,6 +272,19 @@ function showStockData(data) {
     console.log(data)
 }
 
+var stringToColour = function(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    var colour = '#';
+    for (var i = 0; i < 3; i++) {
+      var value = (hash >> (i * 8)) & 0xFF;
+      colour += ('00' + value.toString(16)).substr(-2);
+    }
+    return colour;
+  };
+
 /**
  * Asynchronously loads the GeoJSON at the provided url, replacing any existing data.
  * @param {Object} url The url to be processed.
@@ -315,6 +328,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
         throw new Cesium.DeveloperError('data is required.');
     }
 
+    console.log("Loading")
     //Clear out any data that might already exist.
     this._setLoading(true);
     // this._seriesNames.length = 0;
@@ -384,11 +398,13 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                     rand = -rand;
                 }
                 tictok = !tictok;
-                // TODO: string format in the description, plus an added space to add some urls for news articles, maybe an image if easy enough
+
+                // console.log(name + " actual name is " + globalStockInfo[name].name);
+
                 entities.add({
                     show: false,
                     name : name,
-                    description : "Closing price: $"+closingPrice+"  Volume: "+volume,
+                    description : globalStockInfo[name].name,
                     rectangle : {
                         id : name,
                         coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5+rand, latitude-0.5+rand, longitude+0.5+rand, latitude+0.5+rand),
@@ -397,7 +413,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                         outlineColor: Cesium.Color.WHITE,
                         outlineWidth: 4,
                         stRotation : Cesium.Math.toRadians(45),
-                        material : Cesium.Color.fromRandom({alpha : 1.0})
+                        material : Cesium.Color.fromCssColorString(stringToColour(name+"diff"+name+"diff"+name))
                     },
                     seriesName : seriesName,
                     closingPrice: closingPrice,
@@ -458,10 +474,23 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 });
             }
         }
+    } else { 
+        console.log("Parsing Stock info");
+        for (var x = 1; x < data.length; x++) {
+            var series = data[x];
+            var stockName = series[0];
+            var stockInfo = series[1];
+
+            globalStockInfo[stockName] = {
+                name: stockInfo[0],
+                industry: stockInfo[1],
+                subIndustry: stockInfo[2],
+                location: stockInfo[3],
+                founded: stockInfo[4]
+            }
+        }
+
     }
-
-   
-
     //Once all data is processed, call resumeEvents and raise the changed event.
     entities.resumeEvents();
     this._changed.raiseEvent(this);
@@ -482,10 +511,19 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 viewer.clock.shouldAnimate = false;
 
-// //Now that we've defined our own DataSource, we can use it to load
-// //any JSON data formatted for WebGL Globe.
+var globalStockInfo = {}
+
+//Now that we've defined our own DataSource, we can use it to load
+//any JSON data formatted for WebGL Globe.
+
 var dataSource = new WebGLGlobeDataSource();
-dataSource.loadUrl('../data/stocks/test_stocks.json').then(function() {
+var stockInfoSource = new WebGLGlobeDataSource();
+stockInfoSource.loadUrl('../data/stocks/stock_info.json').then(function() {
+    // for (var key in globalStockInfo) {
+    //     console.log(globalStockInfo[key].name);
+    // }
+
+    dataSource.loadUrl('../data/stocks/test_stocks.json').then(function() {
     //After the initial load, create buttons to let the user switch among series.
     function createSeriesSetter(seriesName) {
         return function() {
@@ -508,25 +546,30 @@ dataSource.loadUrl('../data/stocks/test_stocks.json').then(function() {
     
     Sandcastle.addFooterButton("Show Volume", changeStockVis())
     dataSource.showVolume = false;
-});
+    });
+})
 
-//Now that we've defined our own DataSource, we can use it to load
-//any JSON data formatted for WebGL Globe.
-var dataSource2 = new WebGLGlobeDataSource();
-dataSource2.loadUrl('../data/pop/cities_processed.json').then(function() {
-    // // After the initial load, create buttons to let the user switch among series.
-    // function createSeriesSetter(seriesName) {
-    //     return function() {
-    //         dataSource2.seriesToDisplay = seriesName;
-    //     };
-    // }
+// // //Now that we've defined our own DataSource, we can use it to load
+// // //any JSON data formatted for WebGL Globe.
 
-    // for (var i = 0; i < dataSource2.seriesNames.length; i++) {
-    //     var seriesName = dataSource2.seriesNames[i];
-    //     Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
-    // }
-    viewer.dataSources.add(dataSource2);
-});
+
+// //Now that we've defined our own DataSource, we can use it to load
+// //any JSON data formatted for WebGL Globe.
+// var dataSource2 = new WebGLGlobeDataSource();
+// dataSource2.loadUrl('../data/pop/cities_processed.json').then(function() {
+//     // // After the initial load, create buttons to let the user switch among series.
+//     // function createSeriesSetter(seriesName) {
+//     //     return function() {
+//     //         dataSource2.seriesToDisplay = seriesName;
+//     //     };
+//     // }
+
+//     // for (var i = 0; i < dataSource2.seriesNames.length; i++) {
+//     //     var seriesName = dataSource2.seriesNames[i];
+//     //     Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
+//     // }
+//     viewer.dataSources.add(dataSource2);
+// });
 
 
 var path;
