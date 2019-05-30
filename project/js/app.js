@@ -371,9 +371,6 @@ WebGLGlobeDataSource.prototype.load = function(data) {
 
             var maxValue = getMaxStocksValue(coordinates, 3, 4, 5)
 
-            // Boolean to add or subtract our random shuffle for placing rectangle
-            var tictok
-
             //Now loop over each coordinate in the series and create
             // our entities from the data.
             for (var i = 0; i < coordinates.length; i += 5) {
@@ -384,30 +381,29 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 var volume = coordinates[i + 4];
                 
                 // Scale the height so it displays nicely, lets get its hundreds of millions and scale it up
-                var height = closingPrice * 9000;
+                var height = closingPrice;
 
                 //Ignore lines of zero height.
                 if(height === 0) {
                     continue;
                 }
 
-                // TODO: Need to somehow ensure they don't stack awkwardly. For time being I am adding a random offset
-
-                var rand = Math.floor((Math.random() * 7) + 1);
-                if (tictok) {
-                    rand = -rand;
-                }
-                tictok = !tictok;
-
                 // console.log(name + " actual name is " + globalStockInfo[name].name);
 
                 entities.add({
                     show: false,
                     name : name,
-                    description : globalStockInfo[name].name,
+                    description : '<table class="cesium-infoBox-defaultTable"><tbody>' +
+                    '<tr><th>NAME</th><td>' + globalStockInfo[name].name + '</td></tr>' +
+                    '<tr><th>INDUSTRY</th><td>' + globalStockInfo[name].industry + '</td></tr>' +
+                    '<tr><th>SUB INDUSTRY</th><td>' + globalStockInfo[name].subIndustry + '</td></tr>' +
+                    '<tr><th>LOCATION</th><td>' + globalStockInfo[name].location + '</td></tr>' +
+                    '<tr><th>FOUNDED</th><td>' + globalStockInfo[name].founded + '</td></tr>' +
+                    '<tr><th>CLOSE PRICE</th><td>' + "$"+ closingPrice + '</td></tr>' +
+                    '</tbody></table>',
                     rectangle : {
                         id : name,
-                        coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5+rand, latitude-0.5+rand, longitude+0.5+rand, latitude+0.5+rand),
+                        coordinates : Cesium.Rectangle.fromDegrees(longitude-0.5, latitude-0.5, longitude+0.5, latitude+0.5),
                         extrudedHeight : height,
                         outline: true,
                         outlineColor: Cesium.Color.WHITE,
