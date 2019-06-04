@@ -5,7 +5,7 @@ import os
 import urllib
 import time
 
-API_KEY ='RYRTL1TP73T8UYAY'
+API_KEY ='PUT_ALPHA_VANTAGE_KEY_HERE'
 QUERY = "https://www.alphavantage.co/query?function={}&apikey={}&symbol={}"
 
 

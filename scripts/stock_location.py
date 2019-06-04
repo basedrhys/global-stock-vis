@@ -5,7 +5,7 @@ import csv
 import pandas as pd
 from time import sleep
 
-google_key = 'AIzaSyCUV1cnoYY87ELCkNhjoG7No0vqN9KqWcY'
+google_key = 'PUT_GOOGLE_KEY_HERE'
 base_url = 'https://maps.googleapis.com/maps/api/geocode/json?'
 wiki_df = pd.read_csv('project\data\wiki_table.csv')
 const_df = pd.read_csv('project\data\constituents_csv.csv')
