@@ -182,7 +182,6 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             return this._showVolume;
         },
         set : function(value) {
-            console.log("Changing show volume to " + value)
             this._showVolume = value;
 
             // Change the label text to reflect the showing value
@@ -267,11 +266,6 @@ function clamp(val) {
     return Math.max(0, Math.min(val, 1));
 }
 
-function showStockData(data) {
-    console.log("Showing data")
-    console.log(data)
-}
-
 var stringToColour = function(str) {
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
@@ -328,7 +322,6 @@ WebGLGlobeDataSource.prototype.load = function(data) {
         throw new Cesium.DeveloperError('data is required.');
     }
 
-    console.log("Loading")
     //Clear out any data that might already exist.
     this._setLoading(true);
     // this._seriesNames.length = 0;
@@ -353,7 +346,6 @@ WebGLGlobeDataSource.prototype.load = function(data) {
 
     var type = data[0];
     if (type == "stocks") {
-        console.log("Parsing stock data...");
         // Loop over each series
         for (var x = 1; x < data.length; x++) {
             var series = data[x];
@@ -418,7 +410,6 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             }
         }
     } else if (type == "population") {
-        console.log("Parsing population data...")
         for (var x = 1; x < data.length; x++) {
             var series = data[x];
             var seriesName = series[0];
@@ -458,7 +449,11 @@ WebGLGlobeDataSource.prototype.load = function(data) {
                 
                 entities.add({
                     name : cityName,
-                    description : cityName + ", " + country + ". Population:" + popFormat ,
+                    description : '<table class="cesium-infoBox-defaultTable"><tbody>' +
+                    '<tr><th>City Name</th><td>' + cityName + '</td></tr>' +
+                    '<tr><th>Country</th><td>' + country + '</td></tr>' +
+                    '<tr><th>Population</th><td>' + popFormat + '</td></tr>' +
+                    '</tbody></table>',
                     position : surfacePosition,
                     ellipse : {
                         semiMajorAxis: width * scaleFactor,
@@ -471,18 +466,21 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             }
         }
     } else { 
-        console.log("Parsing Stock info");
         for (var x = 1; x < data.length; x++) {
             var series = data[x];
             var stockName = series[0];
             var stockInfo = series[1];
+
+            var founded = stockInfo[4];
+            if (founded == -1)
+                founded = 'Unknown'
 
             globalStockInfo[stockName] = {
                 name: stockInfo[0],
                 industry: stockInfo[1],
                 subIndustry: stockInfo[2],
                 location: stockInfo[3],
-                founded: stockInfo[4]
+                founded: founded
             }
 
             // Also create the colour dictionary at the same time
@@ -512,7 +510,7 @@ WebGLGlobeDataSource.prototype._setLoading = function(isLoading) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     animation : false,
     timeline : false,
-    sceneMode: Cesium.SceneMode.COLUMBUS_VIEW
+    //sceneMode: Cesium.SceneMode.COLUMBUS_VIEW
 });
 viewer.clock.shouldAnimate = false;
 
@@ -546,8 +544,15 @@ stockInfoSource.loadUrl('../data/stocks/stock_info.json').then(function() {
                 stockDataSource.showVolume = !stockDataSource.showVolume;
             };
         }
+        // Add the button to change the value from the stocks we're looking at
+        function showGithub() {
+            return function() {
+                window.open('https://github.com/basedrhys/global-stock-vis', "_blank");
+            };
+        }
         
         Sandcastle.addFooterButton("Show Volume", changeStockVis())
+        Sandcastle.addFooterButton("GitHub", showGithub())
         stockDataSource.showVolume = false;
     });
 })
