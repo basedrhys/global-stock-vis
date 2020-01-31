@@ -159,12 +159,9 @@
         });
     });
 
-    var server = app.listen(argv.port, argv.public ? undefined : 'localhost', function() {
-        if (argv.public) {
-            console.log('Cesium development server running publicly.  Connect to http://localhost:%d/', server.address().port);
-        } else {
-            console.log('Cesium development server running locally.  Connect to http://localhost:%d/', server.address().port);
-        }
+    const PORT = process.env.PORT || 8080;
+    var server = app.listen(PORT, () => {
+        console.log('Cesium development server running.  Connect to http://localhost:%d/', server.address().port);
     });
 
     server.on('error', function (e) {
