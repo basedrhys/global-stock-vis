@@ -7,7 +7,7 @@ This visualisation was created to compare price/density of companies performing 
 
 Created with [Kieran Frewen](https://github.com/kfrewen).
 
-Hosted [here](https://global-stock-visualisation.appspot.com/).
+Hosted [here](https://basedrhys.github.io/global-stock-vis/).
 
 ## Setup
 To run on your machine, you'll need [Node](https://nodejs.org/en/) installed
