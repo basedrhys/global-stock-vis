@@ -522,9 +522,9 @@ var industryColours = {}
 
 var stockDataSource = new WebGLGlobeDataSource();
 var stockInfoSource = new WebGLGlobeDataSource();
-stockInfoSource.loadUrl('../data/stocks/stock_info.json').then(function() {
+stockInfoSource.loadUrl('data/stocks/stock_info.json').then(function() {
 
-    stockDataSource.loadUrl('../data/stocks/test_stocks.json').then(function() {
+    stockDataSource.loadUrl('data/stocks/test_stocks.json').then(function() {
         viewer.dataSources.add(stockDataSource);
         //After the initial load, create buttons to let the user switch among series.
         function createSeriesSetter(seriesName) {
@@ -560,7 +560,7 @@ stockInfoSource.loadUrl('../data/stocks/stock_info.json').then(function() {
 //Now that we've defined our own DataSource, we can use it to load
 //any JSON data formatted for WebGL Globe.
 var popDataSource = new WebGLGlobeDataSource();
-popDataSource.loadUrl('../data/pop/cities_processed.json').then(function() {
+popDataSource.loadUrl('data/pop/cities_processed.json').then(function() {
     viewer.dataSources.add(popDataSource);
 });
 
