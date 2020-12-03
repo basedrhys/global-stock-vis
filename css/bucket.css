@@ -1083,7 +1083,7 @@ span.cesium-projectionPicker-wrapper {
 	position: absolute;
 	width: 16px;
 	height: 16px;
-	background-image: url(../Source/Widgets/Images/TimelineIcons.png);
+	background-image: url(../Cesium/Widgets/Images/TimelineIcons.png);
 	background-repeat: no-repeat;
 }
 .cesium-viewer {
